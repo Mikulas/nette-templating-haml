@@ -101,7 +101,7 @@ class Haml extends Object
 		$tree = array();
 		$last_node = NULL;
 		$line_number = 0;
-		$parents = array();
+		$parents = array(0 => &$tree);
 		
 		foreach (explode("\n",  $this->template) as $line) {
 			$line_number++;
@@ -113,7 +113,6 @@ class Haml extends Object
 				$level = 0;
 			} elseif ($indent === NULL && $level_last === 0) {
 				$indent = $match['indent'];
-				d('setting indent to', $indent);
 				$level = 1;
 			} else {
 				$level = 0;
@@ -128,13 +127,9 @@ class Haml extends Object
 				} while ($test !== $match['indent']);
 			}
 			
-			$element = String::match($match['value'], '~^(%(?P<tag>[A-Z0-9]+))?(?P<spec>((\.|#)[A-z0-9_-]+)*)(\[(?<opt>.*)\])?(?P<value>.*$)~i');
+			$element = String::match($match['value'], '~^(%(?P<tag>[A-Z0-9]+))?(?P<spec>((\.|#)[A-z0-9_-]+)*)(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
 			if ($element['tag'] === '' && $element['spec'] === '') {
-				if (isset($parent[$level]['value'])) {
-					$parent[$level]['value'] .= ' ' . $match['value'];
-				} else {
-					$parent[$level]['value'] = $match['value'];
-				}
+				$parents[$level - 1]['children'][] = $match['value'];
 				continue;
 			}
 			
@@ -184,7 +179,6 @@ class Haml extends Object
 				$last_node = &$last_node['children'][count($last_node['children']) - 1];
 			}
 			$parents[$level] = &$last_node;
-			
 			$level_last = $level;
 		}
 

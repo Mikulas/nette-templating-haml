@@ -8,6 +8,7 @@ namespace Nette\Latte\Filters;
 
 use Nette\Object;
 use Nette\Utils\Strings as String;
+use Nette\Utils\Html;
 use Nette\Utils\Html\Tags;
 
 
@@ -23,6 +24,7 @@ class Haml extends Object
 	protected $config;
 	protected $doctype;
 	protected $tree;
+	protected $defaultContainer;
 
 
 	public function __construct(array $config = NULL)
@@ -34,20 +36,21 @@ class Haml extends Object
 			$config = array();
 		}
 		$this->config = array_merge($defaults, $config);
+		$this->defaultContainer = Html::el('div');
 	}
 
 	
 	public function parse($template)
 	{
 		$this->template = $template;
-		dd($this->template);
+		//dd($this->template);
 		$this->doctype = $this->getDoctype();
 		$this->tree = $this->buildTree();
-		dd($this->tree);
-		die();
 		
 		// DO NOT CACHE IT
 		$res = $this->toHtml();
+		echo $res;
+		die();
 		de($res);
 		//return $this->toHtml();
 	}
@@ -158,9 +161,13 @@ class Haml extends Object
 			
 			$parents[$level]['children'][] = array('element' => $element, 'children' => array());
 			$parents[$level + 1] = &$parents[$level]['children'][count($parents[$level]['children']) - 1];
+			
+			// treat value as text children node
+			$parents[$level + 1]['children'][] = $element['value'];
+			unset($parents[$level + 1]['element']['value']);
+			
 			$level_last = $level;
 		}
-
 		return $tree;
 	}
 
@@ -169,11 +176,34 @@ class Haml extends Object
 	protected function toHtml()
 	{
 		$html = $this->doctype;
-		foreach ($this->tree as $key => $value) {
-			d($value);
-		}
+		$html .= $this->treeToHtml($this->tree);
+		return $html;
 	}
 
+
+
+	protected function treeToHtml($tree, $level = 0)
+	{
+		$html = '';
+		foreach ($tree['children'] as $node) {
+			if (is_array($node)) {
+				$element = $node['element'];
+				$container = $element['tag'] === '' ? $this->defaultContainer : Html::el($element['tag']);
+				$container->addAttributes($element['attrs']);
+				$html .= "\n";
+				$html .= str_repeat("\t", $level);
+				$html .= $container->startTag();
+				$html .= $this->treeToHtml($node, $level + 1);
+				$html .= "\n";
+				$html .= str_repeat("\t", $level);
+				$html .= $container->endTag();
+			} else {
+				$html .= $node;
+			}
+		}
+		
+		return $html;
+	}
 }
 
 class HamlException extends \Nette\Templating\FilterException {}

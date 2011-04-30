@@ -4,7 +4,7 @@
  * @author Mikuláš Dítě
  */
 
-namespace Nette\Latte\Filters;
+namespace Nette\Templating\Filters;
 
 use Nette\Object;
 use Nette\Utils\Strings as String;

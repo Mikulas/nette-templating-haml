@@ -142,6 +142,17 @@ class Haml extends Object
 			foreach ($element as $key => $value)
 				if (is_int($key)) unset($element[$key]);
 			
+			// set id
+			$id = String::match($element['spec'], '~#(?P<id>[A-z0-9_-]+)~');
+			$element['attrs']['id'] = $id['id'];
+			
+			// set classes
+			$element['attrs']['class'] = array();
+			foreach (String::matchAll($element['spec'], '~\.(?P<class>[A-z0-9_]+)~') as $m) {
+				$element['attrs']['class'][] = $m['class'];
+			}
+			unset ($element['spec']);
+			
 			
 			if ($level === 0) {
 				$tree[] = array('parent' => &$tree, 'element' => $element, 'children' => array());

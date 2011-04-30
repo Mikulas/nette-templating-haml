@@ -42,9 +42,8 @@ class Haml extends Object
 		$this->template = $template;
 		dd($this->template);
 		$this->doctype = $this->getDoctype();
-		$this->buildTree();
-		de($this->doctype);
-		de($this->template);
+		$this->tree = $this->buildTree();
+		return $this->toHtml();
 	}
 
 
@@ -93,6 +92,8 @@ class Haml extends Object
 		$indent = NULL;
 		$level = 0;
 		$level_last = 0;
+		$tree = array();
+		$last_node = NULL;
 		
 		$rgx = '~^(?P<indent>[ \t]*)(?P<type>#|%|\.)(?P<name>[^ \t]+?)(?P<attr>\{.*\})?([ \t]+(?P<value>.*?))?[\r\n]{1,2}~ism';
 		d($rgx);
@@ -114,16 +115,38 @@ class Haml extends Object
 					}
 				} while ($test !== $element['indent']);
 			}
-			$this->tree[] = array('level' => $level, 'element' => $element);
-			d($element['name'], $level_last, $level);
-			/*
-			array(
-				array('el' =>  $el, 'children' => array()),
-			);
-			*/
+			
+			// clean the match
+			foreach ($element as $key => $value)
+				if (is_int($key)) unset($element[$key]);
+			$element = $element['name'];
+			
+			if ($level === 0) {
+				$tree[] = array('parent' => &$tree, 'element' => $element, 'children' => array());
+				$last_node = &$tree[count($tree) - 1];
+				
+			} elseif ($level > $level_last) { // insert child
+				$last_node['children'][] = array('parent' => &$last_node, 'element' => $element, 'children' => array());
+				$last_node = &$last_node['children'][count($last_node['children']) - 1];
+				
+			} elseif ($level == $level_last) { // insert sibling
+				$last_node['parent']['children'][] = array('parent' => &$last_node['parent'], 'element' => $element, 'children' => array());
+				$last_node = &$last_node['parent']['children'][count($last_node['parent']['children']) - 1];
+				
+			} elseif ($level < $level_last) {
+				$temp = $level;
+				do {
+					$last_node = &$last_node['parent'];
+					$temp++;
+				} while ($temp != $level_last + 1);
+				$last_node['children'][] = array('parent' => &$last_node, 'element' => $element, 'children' => array());
+				$last_node = &$last_node['children'][count($last_node['children']) - 1];
+			}
+			
 			$level_last = $level;
 		}
-		de($this->tree);
+		
+		return $tree;
 	}
 
 }

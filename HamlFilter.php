@@ -43,7 +43,13 @@ class Haml extends Object
 		dd($this->template);
 		$this->doctype = $this->getDoctype();
 		$this->tree = $this->buildTree();
-		return $this->toHtml();
+		dd($this->tree);
+		die();
+		
+		// DO NOT CACHE IT
+		$res = $this->toHtml();
+		de($res);
+		//return $this->toHtml();
 	}
 
 
@@ -94,32 +100,48 @@ class Haml extends Object
 		$level_last = 0;
 		$tree = array();
 		$last_node = NULL;
+		$line_number = 0;
+		$parents = array();
 		
-		$rgx = '~^(?P<indent>[ \t]*)(?P<type>#|%|\.)(?P<name>[^ \t]+?)(?P<attr>\{.*\})?([ \t]+(?P<value>.*?))?[\r\n]{1,2}~ism';
-		d($rgx);
-		foreach (String::matchAll($this->getStrippedTemplate(), $rgx) as $element) {
-			if ($element['indent'] === '') {
+		foreach (explode("\n",  $this->template) as $line) {
+			$line_number++;
+			
+			if (trim($line) === '') continue;
+			
+			$match = String::match($line, '~^(?P<indent>[ \t]*)(?P<value>.*)$~i');
+			if ($match['indent'] === '') {
 				$level = 0;
-			} elseif ($indent === NULL && $level === 0) {
-				$indent = $element['indent'];
+			} elseif ($indent === NULL && $level_last === 0) {
+				$indent = $match['indent'];
+				d('setting indent to', $indent);
 				$level = 1;
 			} else {
 				$level = 0;
 				do {
 					$level++;
 					$test = str_repeat($indent, $level);
-					if ($level_last + 1 < $level) {
-						throw new HamlException("Invalid indentation detected. You should always indent children by one scope only.");
-					} elseif (strlen($test) > strlen($element['indent'])) {
-						throw new HamlException("Invalid indentation detected. Use either spaces or tabs, but not both.");
+					if ($level > $level_last + 1) {
+						throw new HamlException("Invalid indentation detected. You should always indent children by one scope only.", NULL, $line_number);
+					} elseif (strlen($test) > strlen($match['indent'])) {
+						throw new HamlException("Invalid indentation detected. Use either spaces or tabs, but not both.", NULL, $line_number);
 					}
-				} while ($test !== $element['indent']);
+				} while ($test !== $match['indent']);
+			}
+			
+			$element = String::match($match['value'], '~^(%(?P<tag>[A-z0-9]+))?(?P<spec>((\.|#)[A-z0-9_-]+)*).*$~i');
+			if ($element['tag'] === '' && $element['spec'] === '') {
+				if (isset($parent[$level]['value'])) {
+					$parent[$level]['value'] .= ' ' . $match['value'];
+				} else {
+					$parent[$level]['value'] = $match['value'];
+				}
+				continue;
 			}
 			
 			// clean the match
 			foreach ($element as $key => $value)
 				if (is_int($key)) unset($element[$key]);
-			$element = $element['name'];
+			
 			
 			if ($level === 0) {
 				$tree[] = array('parent' => &$tree, 'element' => $element, 'children' => array());
@@ -142,11 +164,22 @@ class Haml extends Object
 				$last_node['children'][] = array('parent' => &$last_node, 'element' => $element, 'children' => array());
 				$last_node = &$last_node['children'][count($last_node['children']) - 1];
 			}
+			$parents[$level] = &$last_node;
 			
 			$level_last = $level;
 		}
-		
+
 		return $tree;
+	}
+
+
+
+	protected function toHtml()
+	{
+		$html = $this->doctype;
+		foreach ($this->tree as $key => $value) {
+			d($value);
+		}
 	}
 
 }

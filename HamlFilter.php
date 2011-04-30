@@ -37,22 +37,25 @@ class Haml extends Object
 		}
 		$this->config = array_merge($defaults, $config);
 		$this->defaultContainer = Html::el('div');
+		Html::$xhtml = $this->config['format'] === self::FORMAT_XHML;
 	}
 
 	
 	public function parse($template)
 	{
 		$this->template = $template;
-		//dd($this->template);
 		$this->doctype = $this->getDoctype();
 		$this->tree = $this->buildTree();
 		
 		// DO NOT CACHE IT
-		$res = $this->toHtml();
-		echo $res;
-		die();
-		de($res);
-		//return $this->toHtml();
+		if (FALSE) {
+			$res = $this->toHtml();
+			echo $res;
+			die();
+			de($res);
+		} else {
+			return $this->toHtml();
+		}
 	}
 
 
@@ -198,7 +201,7 @@ class Haml extends Object
 				$html .= str_repeat("\t", $level);
 				$html .= $container->endTag();
 			} else {
-				$html .= $node;
+				$html .= ' ' . $node;
 			}
 		}
 		

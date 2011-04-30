@@ -187,7 +187,7 @@ class Haml extends Object
 			}
 
 			// set attributes
-			foreach (String::matchAll($element['opt'], '~(?P<key>[A-Z0-9_-]+)[ \t]*=>[ \t]*(?P<value>.*)(?=,|$)~i') as $m) {
+			foreach (String::matchAll($element['opt'], '~(?P<key>[:A-Z0-9_-]+)[ \t]*=>[ \t]*(?P<value>.*)(?=,|$)~i') as $m) {
 				$element['attrs'][$m['key']] = $m['value'];
 			}
 			unset($element['spec']);

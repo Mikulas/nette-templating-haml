@@ -129,7 +129,7 @@ class Haml extends Object
 			
 			$element = String::match($match['value'], '~^(%(?P<tag>[A-Z0-9]+))?(?P<spec>((\.|#)[A-z0-9_-]+)*)(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
 			if ($element['tag'] === '' && $element['spec'] === '') {
-				$parents[$level - 1]['children'][] = $match['value'];
+				$parents[$level]['children'][] = $match['value'];
 				continue;
 			}
 			
@@ -156,29 +156,8 @@ class Haml extends Object
 			unset($element['spec']);
 			unset($element['opt']);
 			
-			
-			if ($level === 0) {
-				$tree[] = array('parent' => &$tree, 'element' => $element, 'children' => array());
-				$last_node = &$tree[count($tree) - 1];
-				
-			} elseif ($level > $level_last) { // insert child
-				$last_node['children'][] = array('parent' => &$last_node, 'element' => $element, 'children' => array());
-				$last_node = &$last_node['children'][count($last_node['children']) - 1];
-				
-			} elseif ($level == $level_last) { // insert sibling
-				$last_node['parent']['children'][] = array('parent' => &$last_node['parent'], 'element' => $element, 'children' => array());
-				$last_node = &$last_node['parent']['children'][count($last_node['parent']['children']) - 1];
-				
-			} elseif ($level < $level_last) {
-				$temp = $level;
-				do {
-					$last_node = &$last_node['parent'];
-					$temp++;
-				} while ($temp != $level_last + 1);
-				$last_node['children'][] = array('parent' => &$last_node, 'element' => $element, 'children' => array());
-				$last_node = &$last_node['children'][count($last_node['children']) - 1];
-			}
-			$parents[$level] = &$last_node;
+			$parents[$level]['children'][] = array('element' => $element, 'children' => array());
+			$parents[$level + 1] = &$parents[$level]['children'][count($parents[$level]['children']) - 1];
 			$level_last = $level;
 		}
 

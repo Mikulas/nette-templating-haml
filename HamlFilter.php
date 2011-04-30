@@ -191,9 +191,18 @@ class Haml extends Object
 			}
 
 			// set attributes
+			$quotes = String::matchAll($element['opt'], '~"(?P<quoted>.*?)"~i');
+			foreach ($quotes as $index => $q) {
+				$element['opt'] = String::replace($element['opt'], '~".*?"~i', "__QUOTED_STRING_<$index>__");
+			}
+			
 			foreach (String::matchAll($element['opt'], '~(?P<key>[:A-Z0-9_-]+)[ \t]*=>[ \t]*(?P<value>.*?)(?=,|$)~i') as $m) {
+				foreach ($quotes as $index => $q) {
+					$m['value'] = String::replace($m['value'], "~__QUOTED_STRING_<$index>__~", $q['quoted']);
+				}
 				$element['attrs'][$m['key']] = $m['value'];
 			}
+			
 			unset($element['spec']);
 			unset($element['opt']);
 

@@ -9,6 +9,7 @@ namespace Nette\Templating\Filters;
 use Nette\Object;
 use Nette\Utils\Strings as String;
 use Nette\Utils\UnsafeHtml as Html;
+use Nette\Utils\Html as OriginalHtml;
 use Nette\Utils\Html\Tags;
 
 
@@ -49,7 +50,7 @@ class Haml extends Object
 
 		$this->config = array_merge($defaults, $config);
 		$this->defaultContainer = Html::el('div');
-		Html::$xhtml = $this->isXhtml();
+		Html::$xhtml = OriginalHtml::$xhtml = $this->isXhtml();
 	}
 
 

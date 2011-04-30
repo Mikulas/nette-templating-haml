@@ -8,7 +8,7 @@ namespace Nette\Templating\Filters;
 
 use Nette\Object;
 use Nette\Utils\Strings as String;
-use Nette\Utils\Html;
+use Nette\Utils\UnsafeHtml as Html;
 use Nette\Utils\Html\Tags;
 
 
@@ -26,9 +26,6 @@ class Haml extends Object
 	
 	/** @var array */
 	protected $config;
-	
-	/** @var string */
-	protected $doctype;
 	
 	/** @var array */
 	protected $tree;
@@ -76,7 +73,6 @@ class Haml extends Object
 	public function parse($template)
 	{
 		$this->template = $template;
-		$this->doctype = $this->getDoctype();
 		$this->tree = $this->buildTree();
 
 		return $this->toHtml();
@@ -99,7 +95,7 @@ class Haml extends Object
 	 */
 	protected function getDoctype()
 	{
-		$match = String::match($this->template, '~^!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|))?$~im');
+		$match = String::match($this->template, '~^[ \t]*!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|))?$~im');
 		if (!isset($match['doctype'])) {
 			return $this->isXhtml() ? Tags::DOCTYPE_TRANS : Tags::DOCTYPE_4_TRANS;
 		}
@@ -143,6 +139,11 @@ class Haml extends Object
 
 			if (trim($line) === '') continue;
 
+			if (String::match($line, '~^[ \t]*!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|))?$~im')) {
+				$tree['children'][] = $this->getDoctype();
+				continue;
+			}
+			
 			$match = String::match($line, '~^(?P<indent>[ \t]*)(?P<value>.*)$~i');
 			if ($match['indent'] === '') {
 				$level = 0;
@@ -164,7 +165,7 @@ class Haml extends Object
 				} while ($test !== $match['indent']);
 			}
 
-			$element = String::match($match['value'], '~^(%(?P<tag>[A-Z0-9]+))?(?P<spec>((\.|#)[A-z0-9_-]+)*)(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
+			$element = String::match($match['value'], '~^(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-z0-9_-]+)*)(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
 			if ($element['tag'] === '' && $element['spec'] === '') {
 				if (isset($parents[$level]['children']) && count($parents[$level]['children']) && !is_array($parents[$level]['children'][count($parents[$level]['children']) - 1])) {
 					$match['value'] = ' ' . $match['value'];
@@ -190,7 +191,7 @@ class Haml extends Object
 			}
 
 			// set attributes
-			foreach (String::matchAll($element['opt'], '~(?P<key>[:A-Z0-9_-]+)[ \t]*=>[ \t]*(?P<value>.*)(?=,|$)~i') as $m) {
+			foreach (String::matchAll($element['opt'], '~(?P<key>[:A-Z0-9_-]+)[ \t]*=>[ \t]*(?P<value>.*?)(?=,|$)~i') as $m) {
 				$element['attrs'][$m['key']] = $m['value'];
 			}
 			unset($element['spec']);
@@ -213,25 +214,15 @@ class Haml extends Object
 
 
 	/**
-	 * @return string html
-	 */
-	protected function toHtml()
-	{
-		$html = $this->doctype;
-		$html .= $this->treeToHtml($this->tree);
-
-		return $html;
-	}
-
-
-
-	/**
 	 * @param array $tree
 	 * @param int $level
 	 * @return string html
 	 */
-	protected function treeToHtml($tree, $level = 0)
+	protected function toHtml($tree = NULL, $level = 0)
 	{
+		if ($tree === NULL)
+			$tree = $this->tree;
+
 		$html = '';
 		foreach ($tree['children'] as $node) {
 			if (is_array($node)) {
@@ -241,9 +232,11 @@ class Haml extends Object
 
 				$html .= "\n" . str_repeat("\t", $level);
 				$html .= $container->startTag();
-				$html .= $this->treeToHtml($node, $level + 1);
+				$html .= $this->toHtml($node, $level + 1);
+
 				if ($this->hasChildrenElements($node))
 					$html .= "\n" . str_repeat("\t", $level);
+
 				$html .= $container->endTag();
 
 			} else {

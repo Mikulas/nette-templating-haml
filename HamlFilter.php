@@ -128,7 +128,7 @@ class Haml extends Object
 				} while ($test !== $match['indent']);
 			}
 			
-			$element = String::match($match['value'], '~^(%(?P<tag>[A-z0-9]+))?(?P<spec>((\.|#)[A-z0-9_-]+)*).*$~i');
+			$element = String::match($match['value'], '~^(%(?P<tag>[A-Z0-9]+))?(?P<spec>((\.|#)[A-z0-9_-]+)*)(\[(?<opt>.*)\])?(?P<value>.*$)~i');
 			if ($element['tag'] === '' && $element['spec'] === '') {
 				if (isset($parent[$level]['value'])) {
 					$parent[$level]['value'] .= ' ' . $match['value'];
@@ -142,16 +142,24 @@ class Haml extends Object
 			foreach ($element as $key => $value)
 				if (is_int($key)) unset($element[$key]);
 			
+			
+			$element['attrs'] = array();
 			// set id
-			$id = String::match($element['spec'], '~#(?P<id>[A-z0-9_-]+)~');
+			$id = String::match($element['spec'], '~#(?P<id>[A-Z0-9_-]+)~i');
 			$element['attrs']['id'] = $id['id'];
 			
 			// set classes
 			$element['attrs']['class'] = array();
-			foreach (String::matchAll($element['spec'], '~\.(?P<class>[A-z0-9_]+)~') as $m) {
+			foreach (String::matchAll($element['spec'], '~\.(?P<class>[A-Z0-9_]+)~i') as $m) {
 				$element['attrs']['class'][] = $m['class'];
 			}
-			unset ($element['spec']);
+			
+			// set attributes
+			foreach (String::matchAll($element['opt'], '~(?P<key>[A-Z0-9_-]+)[ \t]*=>[ \t]*(?P<value>.*)(?=,|$)~i') as $m) {
+				$element['attrs'][$m['key']] = $m['value'];
+			}
+			unset($element['spec']);
+			unset($element['opt']);
 			
 			
 			if ($level === 0) {

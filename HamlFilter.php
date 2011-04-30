@@ -166,6 +166,9 @@ class Haml extends Object
 
 			$element = String::match($match['value'], '~^(%(?P<tag>[A-Z0-9]+))?(?P<spec>((\.|#)[A-z0-9_-]+)*)(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
 			if ($element['tag'] === '' && $element['spec'] === '') {
+				if (isset($parents[$level]['children']) && count($parents[$level]['children']) && !is_array($parents[$level]['children'][count($parents[$level]['children']) - 1])) {
+					$match['value'] = ' ' . $match['value'];
+				}
 				$parents[$level]['children'][] = $match['value'];
 				continue;
 			}
@@ -197,7 +200,8 @@ class Haml extends Object
 			$parents[$level + 1] = &$parents[$level]['children'][count($parents[$level]['children']) - 1];
 
 			// treat value as text children node
-			$parents[$level + 1]['children'][] = $element['value'];
+			if ($element['value'] !== '')
+				$parents[$level + 1]['children'][] = $element['value'];
 			unset($parents[$level + 1]['element']['value']);
 
 			$level_last = $level;
@@ -238,15 +242,30 @@ class Haml extends Object
 				$html .= "\n" . str_repeat("\t", $level);
 				$html .= $container->startTag();
 				$html .= $this->treeToHtml($node, $level + 1);
-				$html .= "\n" . str_repeat("\t", $level);
+				if ($this->hasChildrenElements($node))
+					$html .= "\n" . str_repeat("\t", $level);
 				$html .= $container->endTag();
 
 			} else {
-				$html .= ' ' . $node;
+				$html .= $node;
 			}
 		}
 
 		return $html;
+	}
+
+
+
+	/**
+	 * @return bool
+	 */
+	protected function hasChildrenElements($tree)
+	{
+		foreach ($tree['children'] as $node) {
+			if (is_array($node))
+				return TRUE;
+		}
+		return FALSE;
 	}
 
 }

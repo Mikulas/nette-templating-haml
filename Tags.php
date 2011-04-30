@@ -6,11 +6,8 @@
 
 namespace Nette\Utils\Html;
 
-use Nette\Object;
-use Nette\Utils\Strings as String;
 
-
-class Tags extends Object
+class Tags
 {
 
 	const DOCTYPE_TRANS = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
@@ -24,5 +21,5 @@ class Tags extends Object
 	const DOCTYPE_4_TRANS = '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">';
 	const DOCTYPE_4_STRICT = '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">';
 	const DOCTYPE_4_FRAMESET = '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">';
-	
+
 }

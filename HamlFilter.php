@@ -18,61 +18,92 @@ class Haml extends Object
 	const FORMAT_XHML = 'xhtml';
 	const FORMAT_HTML4 = 'html4';
 	const FORMAT_HTML5 = 'html5';
-	
 
+
+
+	/** @var string */
 	protected $template;
+	
+	/** @var array */
 	protected $config;
+	
+	/** @var string */
 	protected $doctype;
+	
+	/** @var array */
 	protected $tree;
+	
+	/** @var \Nette\Utils\Html */
 	protected $defaultContainer;
 
 
+
+	/**
+	 * @param array $config keys: format
+	 */
 	public function __construct(array $config = NULL)
 	{
 		$defaults = array(
 			'format' => self::FORMAT_HTML5,
 		);
-		if ($config === NULL) {
+
+		if ($config === NULL)
 			$config = array();
-		}
+
 		$this->config = array_merge($defaults, $config);
 		$this->defaultContainer = Html::el('div');
-		Html::$xhtml = $this->config['format'] === self::FORMAT_XHML;
+		Html::$xhtml = $this->isXhtml();
 	}
 
-	
+
+
+	/**
+	 * @param string $template
+	 * @throws Nette\Latte\Filters\HamlException
+	 */
+	public function __invoke($template)
+	{
+		return $this->parse($template);
+	}
+
+
+
+	/**
+	 * @param string $template
+	 * @throws Nette\Latte\Filters\HamlException
+	 * @return string filtered template
+	 */	
 	public function parse($template)
 	{
 		$this->template = $template;
 		$this->doctype = $this->getDoctype();
 		$this->tree = $this->buildTree();
-		
-		// DO NOT CACHE IT
-		if (FALSE) {
-			$res = $this->toHtml();
-			echo $res;
-			die();
-			de($res);
-		} else {
-			return $this->toHtml();
-		}
+
+		return $this->toHtml();
 	}
 
 
 
+	/**
+	 * @return bool
+	 */
 	public function isXhtml()
 	{
 		return $this->config['format'] === self::FORMAT_XHML;
 	}
 
 
-	/** @todo add support for custom encoding, or enforce utf-8 as latte does? */
+
+	/**
+	 * @return string doctype
+	 */
 	protected function getDoctype()
 	{
-		$match = String::match($this->template, '~^!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|)([ \t]+(?P<encoding>[^ \n]+))?)?$~im');
+		$match = String::match($this->template, '~^!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|))?$~im');
 		if (!isset($match['doctype'])) {
 			return $this->isXhtml() ? Tags::DOCTYPE_TRANS : Tags::DOCTYPE_4_TRANS;
 		}
+
 		switch(strToLower($match['doctype'])) {
 		case 'strict':
 			return $this->isXhtml() ? Tags::DOCTYPE_STRICT : Tags::DOCTYPE_4_STRICT;
@@ -90,15 +121,13 @@ class Haml extends Object
 			return Tags::DOCTYPE_RDFA;
 		}
 	}
-	
-	
-	/** @todo and how are you planning to put these lines back? */
-	protected function getStrippedTemplate()
-	{
-		return String::replace($this->template, '~^[ \t]*\\\\~m');
-	}
-	
-	
+
+
+
+	/**
+	 * @throws Nette\Latte\Filters\HamlException
+	 * @return array
+	 */
 	protected function buildTree()
 	{
 		$indent = NULL;
@@ -108,18 +137,20 @@ class Haml extends Object
 		$last_node = NULL;
 		$line_number = 0;
 		$parents = array(0 => &$tree);
-		
+
 		foreach (explode("\n",  $this->template) as $line) {
 			$line_number++;
-			
+
 			if (trim($line) === '') continue;
-			
+
 			$match = String::match($line, '~^(?P<indent>[ \t]*)(?P<value>.*)$~i');
 			if ($match['indent'] === '') {
 				$level = 0;
+
 			} elseif ($indent === NULL && $level_last === 0) {
 				$indent = $match['indent'];
 				$level = 1;
+
 			} else {
 				$level = 0;
 				do {
@@ -132,59 +163,69 @@ class Haml extends Object
 					}
 				} while ($test !== $match['indent']);
 			}
-			
+
 			$element = String::match($match['value'], '~^(%(?P<tag>[A-Z0-9]+))?(?P<spec>((\.|#)[A-z0-9_-]+)*)(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
 			if ($element['tag'] === '' && $element['spec'] === '') {
 				$parents[$level]['children'][] = $match['value'];
 				continue;
 			}
-			
+
 			// clean the match
 			foreach ($element as $key => $value)
 				if (is_int($key)) unset($element[$key]);
-			
-			
+
+
 			$element['attrs'] = array();
 			// set id
 			$id = String::match($element['spec'], '~#(?P<id>[A-Z0-9_-]+)~i');
 			$element['attrs']['id'] = $id['id'];
-			
+
 			// set classes
 			$element['attrs']['class'] = array();
 			foreach (String::matchAll($element['spec'], '~\.(?P<class>[A-Z0-9_]+)~i') as $m) {
 				$element['attrs']['class'][] = $m['class'];
 			}
-			
+
 			// set attributes
 			foreach (String::matchAll($element['opt'], '~(?P<key>[A-Z0-9_-]+)[ \t]*=>[ \t]*(?P<value>.*)(?=,|$)~i') as $m) {
 				$element['attrs'][$m['key']] = $m['value'];
 			}
 			unset($element['spec']);
 			unset($element['opt']);
-			
+
 			$parents[$level]['children'][] = array('element' => $element, 'children' => array());
 			$parents[$level + 1] = &$parents[$level]['children'][count($parents[$level]['children']) - 1];
-			
+
 			// treat value as text children node
 			$parents[$level + 1]['children'][] = $element['value'];
 			unset($parents[$level + 1]['element']['value']);
-			
+
 			$level_last = $level;
 		}
+
 		return $tree;
 	}
 
 
 
+	/**
+	 * @return string html
+	 */
 	protected function toHtml()
 	{
 		$html = $this->doctype;
 		$html .= $this->treeToHtml($this->tree);
+
 		return $html;
 	}
 
 
 
+	/**
+	 * @param array $tree
+	 * @param int $level
+	 * @return string html
+	 */
 	protected function treeToHtml($tree, $level = 0)
 	{
 		$html = '';
@@ -193,20 +234,21 @@ class Haml extends Object
 				$element = $node['element'];
 				$container = $element['tag'] === '' ? $this->defaultContainer : Html::el($element['tag']);
 				$container->addAttributes($element['attrs']);
-				$html .= "\n";
-				$html .= str_repeat("\t", $level);
+
+				$html .= "\n" . str_repeat("\t", $level);
 				$html .= $container->startTag();
 				$html .= $this->treeToHtml($node, $level + 1);
-				$html .= "\n";
-				$html .= str_repeat("\t", $level);
+				$html .= "\n" . str_repeat("\t", $level);
 				$html .= $container->endTag();
+
 			} else {
 				$html .= ' ' . $node;
 			}
 		}
-		
+
 		return $html;
 	}
+
 }
 
 class HamlException extends \Nette\Templating\FilterException {}

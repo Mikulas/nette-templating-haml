@@ -166,7 +166,7 @@ class Haml extends Object
 				} while ($test !== $match['indent']);
 			}
 
-			$element = String::match($match['value'], '~^(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-z0-9_-]+)*)(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
+			$element = String::match($match['value'], '~^(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-z0-9_-]+)*)[ \t]*(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
 			if ($element['tag'] === '' && $element['spec'] === '') {
 				if (isset($parents[$level]['children']) && count($parents[$level]['children']) && !is_array($parents[$level]['children'][count($parents[$level]['children']) - 1])) {
 					$match['value'] = ' ' . $match['value'];

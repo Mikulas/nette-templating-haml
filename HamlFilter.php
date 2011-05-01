@@ -73,6 +73,10 @@ class Haml extends Object
 	 */	
 	public function parse($template)
 	{
+		if (trim($template) === '') {
+			return $template;
+		}
+
 		$this->template = $template;
 		$this->tree = $this->buildTree();
 

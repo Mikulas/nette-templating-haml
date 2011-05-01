@@ -192,17 +192,30 @@ class Haml extends Object
 			}
 
 			// set attributes
+			/** @todo rewrite me plase */
+			$rgx_macro = '~\{(?P<macro>.*?)\}~i';
+			$macros = String::matchAll($element['opt'], $rgx_macro);
+			foreach ($macros as $index => $q) {
+				$element['opt'] = String::replace($element['opt'], $rgx_macro, "__MACRO_STRING_<$index>__");
+			}
 			$rgx_quote = '~(\'|")(?P<quoted>.*?)\\1~i';
 			$quotes = String::matchAll($element['opt'], $rgx_quote);
 			foreach ($quotes as $index => $q) {
 				$element['opt'] = String::replace($element['opt'], $rgx_quote, "__QUOTED_STRING_<$index>__");
 			}
 			
-			foreach (String::matchAll($element['opt'], '~(?P<key>[:A-Z0-9_-]+)[ \t]*=>[ \t]*(?P<value>.*?)(?=,|$)~i') as $m) {
-				foreach ($quotes as $index => $q) {
-					$m['value'] = String::replace($m['value'], "~__QUOTED_STRING_<$index>__~", $q['quoted']);
+			foreach (String::matchAll($element['opt'], '~(?P<key>[:A-Z0-9_-]+)([ \t]*=>[ \t]*(?P<value>.*?)(?=,|$))?~i') as $m) {
+				if (isset($m['value'])) {
+					foreach ($macros as $index => $q) {
+						$m['value'] = String::replace($m['value'], "~__MACRO_STRING_<$index>__~", $q['macro']);
+					}
+					foreach ($quotes as $index => $q) {
+						$m['value'] = String::replace($m['value'], "~__QUOTED_STRING_<$index>__~", $q['quoted']);
+					}
+					$element['attrs'][$m['key']] = $m['value'];
+				} else {
+					$element['attrs'][$m['key']] = TRUE;
 				}
-				$element['attrs'][$m['key']] = $m['value'];
 			}
 			
 			unset($element['spec']);

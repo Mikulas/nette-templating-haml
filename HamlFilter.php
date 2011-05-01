@@ -193,7 +193,7 @@ class Haml extends Object
 
 			// set attributes
 			/** @todo rewrite me plase */
-			$rgx_macro = '~\{(?P<macro>.*?)\}~i';
+			$rgx_macro = '~\{.*?\}~i';
 			$macros = String::matchAll($element['opt'], $rgx_macro);
 			foreach ($macros as $index => $q) {
 				$element['opt'] = String::replace($element['opt'], $rgx_macro, "__MACRO_STRING_<$index>__");
@@ -207,7 +207,7 @@ class Haml extends Object
 			foreach (String::matchAll($element['opt'], '~(?P<key>[:A-Z0-9_-]+)([ \t]*=>[ \t]*(?P<value>.*?)(?=,|$))?~i') as $m) {
 				if (isset($m['value'])) {
 					foreach ($macros as $index => $q) {
-						$m['value'] = String::replace($m['value'], "~__MACRO_STRING_<$index>__~", $q['macro']);
+						$m['value'] = String::replace($m['value'], "~__MACRO_STRING_<$index>__~", $q[0]);
 					}
 					foreach ($quotes as $index => $q) {
 						$m['value'] = String::replace($m['value'], "~__QUOTED_STRING_<$index>__~", $q['quoted']);

@@ -189,12 +189,6 @@ class Haml extends Object
 			$id = String::match($element['spec'], '~#(?P<id>[A-Z0-9_-]+)~i');
 			$element['attrs']['id'] = $id['id'];
 
-			// set classes
-			$element['attrs']['class'] = array();
-			foreach (String::matchAll($element['spec'], '~\.(?P<class>[A-Z0-9_]+)~i') as $m) {
-				$element['attrs']['class'][] = $m['class'];
-			}
-
 			// set attributes
 			/** @todo rewrite me plase */
 			$rgx_macro = '~\{.*?\}~i';
@@ -221,7 +215,13 @@ class Haml extends Object
 					$element['attrs'][$m['key']] = TRUE;
 				}
 			}
-			
+
+			// set classes
+			$element['attrs']['class'] = array(isset($element['attrs']['class']) ? $element['attrs']['class'] : NULL);
+			foreach (String::matchAll($element['spec'], '~\.(?P<class>[A-Z0-9_]+)~i') as $m) {
+				$element['attrs']['class'][] = $m['class'];
+			}
+
 			unset($element['spec']);
 			unset($element['opt']);
 

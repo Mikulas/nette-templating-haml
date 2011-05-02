@@ -135,9 +135,9 @@ class Haml extends Object
 		$level = 0;
 		$level_last = 0;
 		$tree = array();
+		$last_node = NULL;
 		$line_number = 0;
 		$parents = array(0 => &$tree);
-		$text_last = FALSE;
 
 		foreach (explode("\n",  $this->template) as $line) {
 			$line_number++;
@@ -148,12 +148,9 @@ class Haml extends Object
 				$tree['children'][] = $this->getDoctype();
 				continue;
 			}
-
+			
 			$match = String::match($line, '~^(?P<indent>[ \t]*)(?P<value>.*)$~i');
-			if ($text_last) {
-				$level = $level_last;
-
-			} elseif ($match['indent'] === '') {
+			if ($match['indent'] === '') {
 				$level = 0;
 
 			} elseif ($indent === NULL && $level_last === 0) {
@@ -165,10 +162,8 @@ class Haml extends Object
 				do {
 					$level++;
 					$test = str_repeat($indent, $level);
-
 					if ($level > $level_last + 1) {
-						$level--; // was set to child scope
-						break;
+						throw new HamlException("Invalid indentation detected. You should always indent children by one scope only.", NULL, $line_number);
 					} elseif (strlen($test) > strlen($match['indent'])) {
 						throw new HamlException("Invalid indentation detected. Use either spaces or tabs, but not both.", NULL, $line_number);
 					}
@@ -181,12 +176,8 @@ class Haml extends Object
 					$match['value'] = ' ' . $match['value'];
 				}
 				$parents[$level]['children'][] = $match['value'];
-				$text_last = TRUE;
-				$level_last = $level;
-
 				continue;
 			}
-			$text_last = FALSE;
 
 			// clean the match
 			foreach ($element as $key => $value)
@@ -216,7 +207,7 @@ class Haml extends Object
 			foreach ($quotes as $index => $q) {
 				$element['opt'] = String::replace($element['opt'], $rgx_quote, "__QUOTED_STRING_<$index>__");
 			}
-
+			
 			foreach (String::matchAll($element['opt'], '~(?P<key>[:A-Z0-9_-]+)([ \t]*=>[ \t]*(?P<value>.*?)(?=,|$))?~i') as $m) {
 				if (isset($m['value'])) {
 					foreach ($macros as $index => $q) {
@@ -230,7 +221,7 @@ class Haml extends Object
 					$element['attrs'][$m['key']] = TRUE;
 				}
 			}
-
+			
 			unset($element['spec']);
 			unset($element['opt']);
 

@@ -280,7 +280,7 @@ class Haml extends Object
 	/**
 	 * @return bool
 	 */
-	protected function hasChildrenElements($tree)
+	private function hasChildrenElements($tree)
 	{
 		foreach ($tree['children'] as $node) {
 			if (is_array($node))

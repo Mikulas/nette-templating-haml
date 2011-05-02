@@ -338,7 +338,7 @@ class UnsafeHtml extends Nette\Object implements \ArrayAccess, \Countable, \Iter
 	 */
 	public function insert($index, $child, $replace = FALSE)
 	{
-		if ($child instanceof Html || is_scalar($child)) {
+		if ($child instanceof Html || $child instanceof UnsafeHtml || is_scalar($child)) {
 			if ($index === NULL) { // append
 				$this->children[] = $child;
 

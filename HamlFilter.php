@@ -218,7 +218,7 @@ class Haml extends Object
 
 			// set classes
 			$element['attrs']['class'] = array(isset($element['attrs']['class']) ? $element['attrs']['class'] : NULL);
-			foreach (String::matchAll($element['spec'], '~\.(?P<class>[A-Z0-9_]+)~i') as $m) {
+			foreach (String::matchAll($element['spec'], '~\.(?P<class>[A-Z0-9_-]+)~i') as $m) {
 				$element['attrs']['class'][] = $m['class'];
 			}
 

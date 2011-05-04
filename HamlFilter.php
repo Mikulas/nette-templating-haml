@@ -255,7 +255,7 @@ class Haml extends Object
 		foreach ($tree['children'] as $node) {
 			if (is_array($node)) {
 				$element = $node['element'];
-				$container = $element['tag'] === '' ? $this->defaultContainer : Html::el($element['tag']);
+				$container = $element['tag'] === '' ? clone $this->defaultContainer : Html::el($element['tag']);
 				$container->addAttributes($element['attrs']);
 
 				$html .= "\n" . str_repeat("\t", $level);

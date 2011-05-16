@@ -172,6 +172,7 @@ class Haml extends Object
 
 			$element = String::match($match['value'], '~^(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-z0-9_-]+)*)[ \t]*(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
 			if ($element['tag'] === '' && $element['spec'] === '') {
+				$match['value'] = $this->parseMacro($match['value']);
 				if (isset($parents[$level]['children']) && count($parents[$level]['children']) && !is_array($parents[$level]['children'][count($parents[$level]['children']) - 1])) {
 					$match['value'] = ' ' . $match['value'];
 				}
@@ -227,6 +228,8 @@ class Haml extends Object
 
 			$parents[$level]['children'][] = array('element' => $element, 'children' => array());
 			$parents[$level + 1] = &$parents[$level]['children'][count($parents[$level]['children']) - 1];
+
+			$element['value'] = $this->parseMacro($element['value']);
 
 			// treat value as text children node
 			if ($element['value'] !== '')
@@ -287,6 +290,24 @@ class Haml extends Object
 				return TRUE;
 		}
 		return FALSE;
+	}
+
+
+
+	/**
+	 * Evalutes value node and replaces macros with Latte syntax if found
+	 * @param string $string
+	 */
+	private function parseMacro($string)
+	{
+		$macro = String::match($string, '~^[ \t]*=[ \t]*(?P<cmd>.*)$~im');
+		if ($macro !== NULL) {
+			if (String::startsWith($macro['cmd'], '$'))
+				$string = '{' . $macro['cmd'] . '}';
+			else
+				$string = '{=' . $macro['cmd'] . '}';
+		}
+		return $string;
 	}
 
 }

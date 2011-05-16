@@ -138,6 +138,7 @@ class Haml extends Object
 		$last_node = NULL;
 		$line_number = 0;
 		$parents = array(0 => &$tree);
+		$last_text = FALSE;
 
 		foreach (explode("\n",  $this->template) as $line) {
 			$line_number++;
@@ -164,6 +165,8 @@ class Haml extends Object
 					$test = str_repeat($indent, $level);
 					if ($level > $level_last + 1) {
 						throw new HamlException("Invalid indentation detected. You should always indent children by one scope only.", NULL, $line_number);
+					} elseif ($last_text && $level > $level_last) {
+						throw new HamlException("Invalid indentation detected. You cannot return to scope already left.", NULL, $line_number);
 					} elseif (strlen($test) > strlen($match['indent'])) {
 						throw new HamlException("Invalid indentation detected. Use either spaces or tabs, but not both.", NULL, $line_number);
 					}
@@ -177,8 +180,12 @@ class Haml extends Object
 					$match['value'] = ' ' . $match['value'];
 				}
 				$parents[$level]['children'][] = $match['value'];
+
+				$level_last = $level;
+				$last_text = TRUE;
 				continue;
 			}
+			$last_text = FALSE;
 
 			// clean the match
 			foreach ($element as $key => $value)
@@ -216,7 +223,7 @@ class Haml extends Object
 					$element['attrs'][$m['key']] = TRUE;
 				}
 			}
-
+			
 			// set classes
 			$element['attrs']['class'] = array(isset($element['attrs']['class']) ? $element['attrs']['class'] : NULL);
 			foreach (String::matchAll($element['spec'], '~\.(?P<class>[A-Z0-9_-]+)~i') as $m) {

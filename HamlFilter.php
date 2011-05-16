@@ -170,8 +170,8 @@ class Haml extends Object
 				} while ($test !== $match['indent']);
 			}
 
-			$element = String::match($match['value'], '~^(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-z0-9_-]+)*)[ \t]*(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
-			if ($element['tag'] === '' && $element['spec'] === '') {
+			$element = String::match($match['value'], '~^(?P<escaped>\\\\)?(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-z0-9_-]+)*)[ \t]*(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
+			if ($element['escaped'] || ($element['tag'] === '' && $element['spec'] === '')) {
 				$match['value'] = $this->parseMacro($match['value']);
 				if (isset($parents[$level]['children']) && count($parents[$level]['children']) && !is_array($parents[$level]['children'][count($parents[$level]['children']) - 1])) {
 					$match['value'] = ' ' . $match['value'];

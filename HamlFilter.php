@@ -309,11 +309,12 @@ class Haml extends Object
 	{
 		$macro = String::match($string, '~^[ \t]*=[ \t]*(?P<cmd>.*)$~im');
 		if ($macro !== NULL) {
-			if (String::startsWith($macro['cmd'], '$'))
+			if (String::match($macro['cmd'], '~^($|input|label)~i'))
 				$string = '{' . $macro['cmd'] . '}';
 			else
 				$string = '{=' . $macro['cmd'] . '}';
 		}
+
 		return $string;
 	}
 

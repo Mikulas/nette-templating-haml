@@ -24,13 +24,13 @@ class Haml extends Object
 
 	/** @var string */
 	protected $template;
-	
+
 	/** @var array */
 	protected $config;
-	
+
 	/** @var array */
 	protected $tree;
-	
+
 	/** @var \Nette\Utils\Html */
 	protected $defaultContainer;
 
@@ -70,7 +70,7 @@ class Haml extends Object
 	 * @param string $template
 	 * @throws Nette\Latte\Filters\HamlException
 	 * @return string filtered template
-	 */	
+	 */
 	public function parse($template)
 	{
 		if (trim($template) === '') {
@@ -149,7 +149,7 @@ class Haml extends Object
 				$tree['children'][] = $this->getDoctype();
 				continue;
 			}
-			
+
 			$match = String::match($line, '~^(?P<indent>[ \t]*)(?P<value>.*)$~i');
 			if ($match['indent'] === '') {
 				$level = 0;
@@ -202,14 +202,14 @@ class Haml extends Object
 			$rgx_macro = '~\{.*?\}~i';
 			$macros = String::matchAll($element['opt'], $rgx_macro);
 			foreach ($macros as $index => $q) {
-				$element['opt'] = String::replace($element['opt'], $rgx_macro, "__MACRO_STRING_<$index>__");
+				$element['opt'] = String::replace($element['opt'], '~' . preg_quote($q[0], '~') . '~', "__MACRO_STRING_<$index>__");
 			}
 			$rgx_quote = '~(\'|")(?P<quoted>.*?)\\1~i';
 			$quotes = String::matchAll($element['opt'], $rgx_quote);
 			foreach ($quotes as $index => $q) {
-				$element['opt'] = String::replace($element['opt'], $rgx_quote, "__QUOTED_STRING_<$index>__");
+				$element['opt'] = String::replace($element['opt'], '~' . preg_quote($q[0], '~') . '~', "__QUOTED_STRING_<$index>__");
 			}
-			
+
 			foreach (String::matchAll($element['opt'], '~(?P<key>[:A-Z0-9_-]+)([ \t]*=>[ \t]*(?P<value>.*?)(?=,|$))?~i') as $m) {
 				if (isset($m['value'])) {
 					foreach ($macros as $index => $q) {
@@ -223,7 +223,7 @@ class Haml extends Object
 					$element['attrs'][$m['key']] = TRUE;
 				}
 			}
-			
+
 			// set classes
 			$element['attrs']['class'] = array(isset($element['attrs']['class']) ? $element['attrs']['class'] : NULL);
 			foreach (String::matchAll($element['spec'], '~\.(?P<class>[A-Z0-9_-]+)~i') as $m) {
@@ -307,12 +307,12 @@ class Haml extends Object
 	 */
 	private function parseMacro($string)
 	{
-		$macro = String::match($string, '~^[ \t]*=[ \t]*(?P<cmd>.*)$~im');
+		$macro = String::match($string, '~^[ \t]*(?P<raw>!?)=[ \t]*(?P<cmd>.*)$~im');
 		if ($macro !== NULL) {
 			if (String::match($macro['cmd'], '~^($|input|label)~i'))
-				$string = '{' . $macro['cmd'] . '}';
+				$string = '{' . ($macro['raw'] ? '!' : '') . $macro['cmd'] . '}';
 			else
-				$string = '{=' . $macro['cmd'] . '}';
+				$string = '{'  . ($macro['raw'] ? '!=' : '=') . $macro['cmd'] . '}';
 		}
 
 		return $string;

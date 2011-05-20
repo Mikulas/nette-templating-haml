@@ -1,65 +1,69 @@
-Haml filter for Nette
-=====================
+# Haml filter for Nette
 
 * _Author_: Mikuláš Dítě
 * _Copyright_: (c) Mikuláš Dítě 2011
 
-Example
--------
+# Example
+
 
 ```haml
 !!! 5
 %html
   %head
     %meta [name => robots, content => {$robots}, n:ifset => $robots]
-    %title Nette Application Skeleton
+    %title Haml Example
     %script [type => text/javascript, src => {$basePath}/js/netteForms.js]
 
   %body
     %div [n:foreach => $flashes as $flash, class => flash {$flash->type}]
-      {$flash->message}
+      =$flash->message
     .note
       %ul
-        %li Haml...
-        %li Haml is here...
-        %li Haml for your Nette!
+        %li simple text
+        %li =time()
+        %li =$basePath
     %article
       {include #content}
+    \%h3 this is not a node, it's escaped
+
+    support for FormMacros:
+    {form registration}
+      =input name
+      =input submit
+    {/form}
 ```
 
 converts to
 
 ```html
-<!DOCTYPE html> 
-<html> 
+<!DOCTYPE html>
+<html>
 	<head>
-		<title>Nette Application Skeleton</title> 
-		<script type="text/javascript" src="/haml/www/js/netteForms.js"></script> 
-	</head> 
+		<meta name="robots" content="{$robots}" n:ifset="$robots">
+		<title>Haml Example</title>
+		<script type="text/javascript" src="{$basePath}/js/netteForms.js"></script>
+	</head>
 	<body>
-		<div class="note"> 
-			<ul> 
-				<li>Haml...</li> 
-				<li>Haml is here...</li> 
-				<li>Haml for your Nette!</li> 
-			</ul> 
-		</div> 
-		<article>
-			<!-- tady by opravdu byl obsah #content bloku -->
-		</article> 
-	</body> 
-</html> 
+		<div n:foreach="$flashes as $flash" class="flash {$flash->type}">{=$flash->message}</div>
+		<div class="note">
+			<ul>
+				<li>simple text</li>
+				<li>{=time()}</li>
+				<li>{=$basePath}</li>
+			</ul>
+		</div>
+		<article>{include #content}</article>\%h3 this is not a node, it's escaped support for FormMacros: {form registration} {input name} {input submit} {/form}
+	</body>
+</html>
 ```
 
-Requirements
-------------
+# Requirements
 
-* Nette2.0-beta - https://nette.org/
+* Nette Version 2.0 Alpha 2 or newer - http://nette.org/
 
-Installation
-------------
+# Installation
 
-Easy as a pie. Just put these lines to your BasePresenter (and possibly BaseControl)
+Easy as a pie. Just put these lines to your ```BasePresenter``` (and possibly ```BaseControl```)
 
 ```php
 public function templatePrepareFilters($template)
@@ -71,19 +75,77 @@ public function templatePrepareFilters($template)
 
 Just make sure Latte is not executed before Haml filter.
 
-Usage
-------------
+# Usage
 
-Indent by either spaces or tabs, but not both. Remember, with Haml you only write the starting tag. The whole markup looks like this:
+## Overview
+
+Indent by either spaces or tabs, but not both. Remember, with Haml you only write the opening tag. The whole markup looks like this:
 
 ```haml
 %element_name#id.class1.class2[attr1 => unescaped, attr2 => "quoted, , ,"] Text might be here or on the next line
 ```
 
-Now, lets break it down. You may specify the element by omitting the %element_name, in which case it will default to div, which leaves you with the #id, .class, or both. At least one must be set however. Next comes the attributes. No escaping is required but for commas - if you need them, quote the whole value. Attributes are optional. Unlike element, textual values might be put on the end of the line as well as on the next (with relative indentation to the line it belongs to).
+## Detailed
 
-License - Original BSD
------------------------
+Now, lets break it down. You may specify the element by omitting the %element_name, in which case it will default to div, which leaves you with the #id, .class, or both. At least one must be set however. Next comes the optional attributes in the brackets ```[attribute => value, another => "quoted, same"]```. No escaping is required but for commas - if you need them, quote the whole value. Textual values might be put on the end of the line as well as on the next.
+
+## Inline macros
+
+This feature allows you to omit braces around latte macros as long as you start the line with equation mark
+
+```haml
+%h1 = $title
+.div [n:foreach => $articles as $article]
+	%em = $article->label
+	%span = $article->published|date
+%footer
+	functions:
+	= date('Y')
+```
+
+goes for
+
+```html
+<h1>{=$title}</h1>
+<div n:foreach="$articles as $article" class="div">
+	<em>{=$article->label}</em>
+	<span>{=$article->published|date}</span>
+</div>
+<footer>functions: {=date('Y')}</footer>
+```
+
+## Indenting
+
+The parser tries the very best to comprehend the indent, yet some super crazy stuff such this is not parsed as one would assume:
+
+```haml
+{foreach $products as $product}
+	%header = $product|helper
+		this text has level 1, as the line above
+			so does this one and the node below
+			%h2
+				this text finally has level 2
+				again the same
+			THIS WOULD HAVE LEVEL 2
+				and this one as well, but that's ok
+{/foreach}
+```
+But don't worry, you would put it down flat for sure:
+
+```haml
+{foreach $products as $product}
+	%header = $product|helper
+	this text has level 1, as the line above
+	so does this one and the node below
+	%h2
+		this text finally has level 2
+		again the same
+	fine now
+	and this one as well, but that's ok
+{/foreach}
+```
+
+# License - Original BSD
 
 Copyright (c) Mikuláš Dítě, 2011
 All rights reserved.

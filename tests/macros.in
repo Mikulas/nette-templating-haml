@@ -1,0 +1,11 @@
+%one = $product
+%two=$product
+%three [attribute => value] = $product
+%four [attribute => value]=$product
+%five [attribute => value]
+	=$product
+	= $product
+		=$textual
+	=function()
+	= $variable . "string" . function($attribute)
+	= $variable|helper

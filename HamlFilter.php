@@ -168,15 +168,20 @@ class Haml extends Object
 					$level++;
 					$test = str_repeat($indent, $level);
 					if (!$textual && $level > $level_last + 1) {
-						throw new HamlException("Invalid indentation detected. You should indent children by one scope only.", NULL, $line_number);
+						$level = $level_last + 1;
+						break;
 					} elseif (!$textual && $last_textual && $level > $level_last) {
-						throw new HamlException("Invalid indentation detected. You can't add more nodes to the scope already left.", NULL, $line_number);
+						$level = $level_last;
+						break;
 					} elseif (strlen($test) > strlen($match['indent'])) {
 						throw new HamlException("Invalid indentation detected. Use either spaces or tabs, but not both.", NULL, $line_number);
 					}
 				} while ($test !== $match['indent']);
 
 				// free textual indent
+				if (!$last_textual && $textual && $level == $level_last) {
+					$level--;
+				}
 				if ($textual && $level > $level_last) {
 					$level = $level_last + ($last_textual ? 0 : 1);
 				}

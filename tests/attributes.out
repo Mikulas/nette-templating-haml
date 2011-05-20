@@ -4,3 +4,5 @@
 <div id="id" name="something" text="a little longer text" value="specials => `=>_-*/+`-=? works"></div>
 <div id="id1" quoted=", fail => value" apostrophed=", fail => value"></div>
 <div id="id" macro="{plink Foo:bar}" macro2="{var $x => test}" class="class"></div>
+<div attr="value" class="tight"></div>
+<div attr="value" another="value" class="tight"></div>

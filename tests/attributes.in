@@ -4,3 +4,5 @@
 #id [name => something, text => a little longer text, value => specials => `=>_-*/+`-=? works]
 #id1#id2 [quoted => ", fail => value", apostrophed => ', fail => value']
 .class#id [macro => {plink Foo:bar}, macro2 => {var $x => test}]
+.tight[attr=>value,attr=>value]
+.tight[attr=>value,another=>value]

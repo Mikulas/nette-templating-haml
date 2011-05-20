@@ -153,7 +153,8 @@ class Haml extends Object
 			}
 
 			$match = String::match($line, '~^(?P<indent>[ \t]*)(?P<value>.*)$~i');
-			$element = String::match($match['value'], '~^(?P<escaped>\\\\)?(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-z0-9_-]+)*)[ \t]*(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
+			$element = String::match($match['value'], '~^(?P<escaped>\\\\)?(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-Z0-9_-]+)*)[ \t]*(\[(?P<opt>.*)\])?[ \t]*(?P<value>.*)$~i');
+			
 			$textual = $element['escaped'] || ($element['tag'] === '' && $element['spec'] === '');
 
 			if ($match['indent'] === '') {
@@ -332,7 +333,7 @@ class Haml extends Object
 	 */
 	private function parseMacro($string)
 	{
-		$macro = String::match($string, '~^[ \t]*(?P<raw>!?)=[ \t]*(?P<cmd>.*)$~im');
+		$macro = String::match($string, '~^[ \t]*(?P<raw>!?)=(?!>)[ \t]*(?P<cmd>.*)$~im');
 		if ($macro !== NULL) {
 			if (String::match($macro['cmd'], '~^($|input|label)~i'))
 				$string = '{' . ($macro['raw'] ? '!' : '') . $macro['cmd'] . '}';

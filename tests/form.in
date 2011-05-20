@@ -1,0 +1,17 @@
+{form registration}
+	%ul
+		%li [n:foreach => $formErrors as $error] = $error
+	%table
+		%tr
+			%td = label name, text => Jméno
+			%td = input name
+		%tr
+			%td = label mail, text => Mail
+			%td = input mail
+		%tr
+			%td = label password, text => Heslo
+			%td = input password
+		%tr
+			%td
+			%td = input register
+{/form}

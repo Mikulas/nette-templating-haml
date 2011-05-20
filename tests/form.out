@@ -1,0 +1,22 @@
+{form registration}
+<ul>
+	<li n:foreach="$formErrors as $error">{=$error}</li>
+	<table>
+		<tr>
+			<td>{label name, text => Jméno}</td>
+			<td>{input name}</td>
+		</tr>
+		<tr>
+			<td>{label mail, text => Mail}</td>
+			<td>{input mail}</td>
+		</tr>
+		<tr>
+			<td>{label password, text => Heslo}</td>
+			<td>{input password}</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>{input register}</td>
+		</tr>
+	</table>
+</ul>{/form}

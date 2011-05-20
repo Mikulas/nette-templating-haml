@@ -160,7 +160,7 @@ class Haml extends Object
 
 			} elseif ($indent === NULL && $level_last === 0) {
 				$indent = $match['indent'];
-				$level = 1;
+				$level = $last_textual ? 0 : 1;
 
 			} else {
 				$level = 0;

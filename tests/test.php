@@ -33,6 +33,9 @@ while (FALSE !== ($file = readDir($handle))) {
 	$info = pathinfo(__DIR__ . "/$file");
 	$filename = $info['filename'];
 
+	if (isset($argv[1]) && $argv[1] != $filename)
+		continue;
+
 	$in = __DIR__ . "/$filename.in";
 	$template = file_get_contents($in);
 	$haml = new Haml();

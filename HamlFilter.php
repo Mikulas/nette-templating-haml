@@ -234,7 +234,7 @@ class Haml extends Object
 			}
 
 			// set classes
-			$element['attrs']['class'] = array(isset($element['attrs']['class']) ? $element['attrs']['class'] : NULL);
+			$element['attrs']['class'] = isset($element['attrs']['class']) ? array($element['attrs']['class']) : array();
 			foreach (String::matchAll($element['spec'], '~\.(?P<class>[A-Z0-9_-]+)~i') as $m) {
 				$element['attrs']['class'][] = $m['class'];
 			}
@@ -248,13 +248,13 @@ class Haml extends Object
 			$element['value'] = $this->parseMacro($element['value']);
 
 			// treat value as text children node
-			if ($element['value'] !== '')
+			if ($element['value'] !== '') // @todo does this work well with textual?
 				$parents[$level + 1]['children'][] = $element['value'];
 			unset($parents[$level + 1]['element']['value']);
 
 			$level_last = $level;
 		}
-
+dde($tree);
 		return $tree;
 	}
 

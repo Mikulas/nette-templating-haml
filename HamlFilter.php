@@ -188,8 +188,12 @@ class Haml extends Object
 			}
 
 			if ($textual) {
+				if ($element['escaped'] && ($element['tag'] !== '' || $element['spec'] !== ''))
+					$match['value'] = substr ($match['value'], 1);
+
 				$match['value'] = $this->parseMacro($match['value']);
-				if (isset($parents[$level]['children']) && count($parents[$level]['children']) && !is_array($parents[$level]['children'][count($parents[$level]['children']) - 1])) {
+				if (isset($parents[$level]['children']) && count($parents[$level]['children'])
+				 && !is_array($parents[$level]['children'][count($parents[$level]['children']) - 1])) {
 					$match['value'] = ' ' . $match['value'];
 				}
 				$parents[$level]['children'][] = $match['value'];

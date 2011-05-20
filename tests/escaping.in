@@ -1,0 +1,8 @@
+%1
+2 = time()
+\%3e
+	\%4e[attribute => value]
+\%5e
+	\%6e = time()
+\6
+7

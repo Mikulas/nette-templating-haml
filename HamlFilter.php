@@ -100,6 +100,7 @@ class Haml extends Object
 	 */
 	protected function getDoctype()
 	{
+		// @todo only search the first line
 		$match = String::match($this->template, '~^[ \t]*!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|))?$~im');
 		if (!isset($match['doctype'])) {
 			return $this->isXhtml() ? Tags::DOCTYPE_TRANS : Tags::DOCTYPE_4_TRANS;
@@ -131,19 +132,20 @@ class Haml extends Object
 	 */
 	protected function buildTree()
 	{
-		$indent = NULL;
-		$level = 0;
-		$level_last = 0;
 		$tree = array();
-		$last_node = NULL;
-		$line_number = 0;
 		$parents = array(0 => &$tree);
-		$last_text = FALSE;
+		$level = 0;
+		$indent = NULL;
 
+		$level_last = 0;
+		$last_node = NULL;
+		$last_textual = FALSE;
+
+		$line_number = 0;
 		foreach (explode("\n",  $this->template) as $line) {
 			$line_number++;
 
-			if (trim($line) === '') continue;
+			if (trim($line) === '') continue; // @todo add newline to output
 
 			if (String::match($line, '~^[ \t]*!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|))?$~im')) {
 				$tree['children'][] = $this->getDoctype();
@@ -151,6 +153,9 @@ class Haml extends Object
 			}
 
 			$match = String::match($line, '~^(?P<indent>[ \t]*)(?P<value>.*)$~i');
+			$element = String::match($match['value'], '~^(?P<escaped>\\\\)?(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-z0-9_-]+)*)[ \t]*(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
+			$textual = $element['escaped'] || ($element['tag'] === '' && $element['spec'] === '');
+
 			if ($match['indent'] === '') {
 				$level = 0;
 
@@ -163,17 +168,19 @@ class Haml extends Object
 				do {
 					$level++;
 					$test = str_repeat($indent, $level);
-					if ($level > $level_last + 1) {
+					if (!$textual && $level > $level_last + 1) {
 						throw new HamlException("Invalid indentation detected. You should always indent children by one scope only.", NULL, $line_number);
-					} elseif ($last_text && $level > $level_last) {
+					} elseif (!$textual && $last_textual && $level > $level_last) {
 						throw new HamlException("Invalid indentation detected. You cannot return to scope already left.", NULL, $line_number);
 					} elseif (strlen($test) > strlen($match['indent'])) {
 						throw new HamlException("Invalid indentation detected. Use either spaces or tabs, but not both.", NULL, $line_number);
 					}
 				} while ($test !== $match['indent']);
+				if ($textual && $last_textual && $level > $level_last) {
+					$level = $level_last;
+				}
 			}
 
-			$element = String::match($match['value'], '~^(?P<escaped>\\\\)?(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-z0-9_-]+)*)[ \t]*(\[(?<opt>.*)\])?[ \t]*(?P<value>.*$)~i');
 			if ($element['escaped'] || ($element['tag'] === '' && $element['spec'] === '')) {
 				$match['value'] = $this->parseMacro($match['value']);
 				if (isset($parents[$level]['children']) && count($parents[$level]['children']) && !is_array($parents[$level]['children'][count($parents[$level]['children']) - 1])) {
@@ -182,10 +189,10 @@ class Haml extends Object
 				$parents[$level]['children'][] = $match['value'];
 
 				$level_last = $level;
-				$last_text = TRUE;
+				$last_textual = TRUE;
 				continue;
 			}
-			$last_text = FALSE;
+			$last_textual = FALSE;
 
 			// clean the match
 			foreach ($element as $key => $value)

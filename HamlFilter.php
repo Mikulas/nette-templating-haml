@@ -134,12 +134,10 @@ class Haml extends Object
 	{
 		$tree = array();
 		$parents = array(0 => &$tree);
-		$level = 0;
 		$indent = NULL;
 
-		$level_last = 0;
-		$last_node = NULL;
-		$last_textual = FALSE;
+		$level = $level_last = 0;
+		$textual = $last_textual = FALSE;
 
 		$line_number = 0;
 		foreach (explode("\n",  $this->template) as $line) {
@@ -147,6 +145,7 @@ class Haml extends Object
 
 			if (trim($line) === '') continue;
 
+			/** @todo add warning if not on first line */
 			if (String::match($line, '~^[ \t]*!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|))?$~im')) {
 				$tree['children'][] = $this->getDoctype();
 				continue;
@@ -154,7 +153,6 @@ class Haml extends Object
 
 			$match = String::match($line, '~^(?P<indent>[ \t]*)(?P<value>.*)$~i');
 			$element = String::match($match['value'], '~^(?P<escaped>\\\\)?(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-Z0-9_-]+)*)[ \t]*(\[(?P<opt>.*)\])?[ \t]*(?P<value>.*)$~i');
-			
 			$textual = $element['escaped'] || ($element['tag'] === '' && $element['spec'] === '');
 
 			if ($match['indent'] === '') {
@@ -170,9 +168,9 @@ class Haml extends Object
 					$level++;
 					$test = str_repeat($indent, $level);
 					if (!$textual && $level > $level_last + 1) {
-						throw new HamlException("Invalid indentation detected. You should always indent children by one scope only.", NULL, $line_number);
+						throw new HamlException("Invalid indentation detected. You should indent children by one scope only.", NULL, $line_number);
 					} elseif (!$textual && $last_textual && $level > $level_last) {
-						throw new HamlException("Invalid indentation detected. You cannot return to scope already left.", NULL, $line_number);
+						throw new HamlException("Invalid indentation detected. You can't add more nodes to the scope already left.", NULL, $line_number);
 					} elseif (strlen($test) > strlen($match['indent'])) {
 						throw new HamlException("Invalid indentation detected. Use either spaces or tabs, but not both.", NULL, $line_number);
 					}
@@ -184,7 +182,7 @@ class Haml extends Object
 				}
 			}
 
-			if ($element['escaped'] || ($element['tag'] === '' && $element['spec'] === '')) {
+			if ($textual) {
 				$match['value'] = $this->parseMacro($match['value']);
 				if (isset($parents[$level]['children']) && count($parents[$level]['children']) && !is_array($parents[$level]['children'][count($parents[$level]['children']) - 1])) {
 					$match['value'] = ' ' . $match['value'];
@@ -241,18 +239,14 @@ class Haml extends Object
 					$element['attrs']['class'][] = $m['class'];
 			}
 
-			unset($element['spec']);
-			unset($element['opt']);
-
 			$parents[$level]['children'][] = array('element' => $element, 'children' => array());
 			$parents[$level + 1] = &$parents[$level]['children'][count($parents[$level]['children']) - 1];
 
 			$element['value'] = $this->parseMacro($element['value']);
 
 			// treat value as text children node
-			if ($element['value'] !== '') // @todo does this work well with textual?
+			if ($element['value'] !== '')
 				$parents[$level + 1]['children'][] = $element['value'];
-			unset($parents[$level + 1]['element']['value']);
 
 			$level_last = $level;
 		}

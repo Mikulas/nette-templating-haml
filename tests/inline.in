@@ -1,0 +1,15 @@
+%one first
+	second
+		third
+
+%two	first
+		second
+	third
+
+%three [class => test] first
+	second
+	third
+
+%four[class => test]first
+	second
+	third

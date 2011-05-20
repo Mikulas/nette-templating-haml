@@ -178,8 +178,8 @@ class Haml extends Object
 				} while ($test !== $match['indent']);
 
 				// free textual indent
-				if ($textual && $last_textual && $level > $level_last) {
-					$level = $level_last;
+				if ($textual && $level > $level_last) {
+					$level = $level_last + ($last_textual ? 0 : 1);
 				}
 			}
 
@@ -236,7 +236,8 @@ class Haml extends Object
 			// set classes
 			$element['attrs']['class'] = isset($element['attrs']['class']) ? array($element['attrs']['class']) : array();
 			foreach (String::matchAll($element['spec'], '~\.(?P<class>[A-Z0-9_-]+)~i') as $m) {
-				$element['attrs']['class'][] = $m['class'];
+				if (!in_array($m['class'], $element['attrs']['class']))
+					$element['attrs']['class'][] = $m['class'];
 			}
 
 			unset($element['spec']);
@@ -254,8 +255,23 @@ class Haml extends Object
 
 			$level_last = $level;
 		}
-dde($tree);
+
 		return $tree;
+	}
+
+
+
+	/**
+	 * @return string html
+	 */
+	protected function toHtml()
+	{
+		$tree = $this->tree;
+		$last_textual = NULL;
+		$html = $this->nodeToHtml($this->tree, 0, $last_textual);
+		$html .= "\n";
+
+		return $html;
 	}
 
 
@@ -263,13 +279,10 @@ dde($tree);
 	/**
 	 * @param array $tree
 	 * @param int $level
-	 * @return string html
+	 * @param bool $last_textual
 	 */
-	protected function toHtml($tree = NULL, $level = 0)
+	protected function nodeToHtml($tree, $level, & $last_textual)
 	{
-		if ($tree === NULL)
-			$tree = $this->tree;
-
 		$html = '';
 		foreach ($tree['children'] as $node) {
 			if (is_array($node)) {
@@ -277,9 +290,13 @@ dde($tree);
 				$container = $element['tag'] === '' ? clone $this->defaultContainer : Html::el($element['tag']);
 				$container->addAttributes($element['attrs']);
 
-				$html .= "\n" . str_repeat("\t", $level);
+				if ($last_textual !== NULL) {
+					$html .= "\n";
+				}
+				$last_textual = FALSE;
+				$html .= str_repeat("\t", $level);
 				$html .= $container->startTag();
-				$html .= $this->toHtml($node, $level + 1);
+				$html .= $this->nodeToHtml($node, $level + 1, $last_textual);
 
 				if ($this->hasChildrenElements($node))
 					$html .= "\n" . str_repeat("\t", $level);
@@ -287,16 +304,12 @@ dde($tree);
 				$html .= $container->endTag();
 
 			} else {
+				$last_textual = TRUE;
 				$html .= $node;
 			}
 		}
-
-		if ($level === 0)
-			$html .= "\n";
-
 		return $html;
 	}
-
 
 
 	/**

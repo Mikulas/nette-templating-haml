@@ -1,0 +1,6 @@
+.class [attribute => value]
+.class1 [class => class2]
+.class1.class2 [class => class1]
+#id [name => something, text => a little longer text, value => specials => `=>_-*/+`-=? works]
+#id1#id2 [quoted => ", fail => value", apostrophed => ', fail => value']
+.class#id [macro => {plink Foo:bar}, macro2 => {var $x => test}]

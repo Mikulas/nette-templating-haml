@@ -145,7 +145,7 @@ class Haml extends Object
 		foreach (explode("\n",  $this->template) as $line) {
 			$line_number++;
 
-			if (trim($line) === '') continue; // @todo add newline to output
+			if (trim($line) === '') continue;
 
 			if (String::match($line, '~^[ \t]*!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|))?$~im')) {
 				$tree['children'][] = $this->getDoctype();
@@ -176,6 +176,8 @@ class Haml extends Object
 						throw new HamlException("Invalid indentation detected. Use either spaces or tabs, but not both.", NULL, $line_number);
 					}
 				} while ($test !== $match['indent']);
+
+				// free textual indent
 				if ($textual && $last_textual && $level > $level_last) {
 					$level = $level_last;
 				}
@@ -288,6 +290,9 @@ class Haml extends Object
 				$html .= $node;
 			}
 		}
+
+		if ($level === 0)
+			$html .= "\n";
 
 		return $html;
 	}

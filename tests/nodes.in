@@ -1,0 +1,10 @@
+.class
+.class1.class2
+#id
+#id1#id2
+.class#id
+#id.class
+%div
+%p.class
+%p#id.class
+%p#id1#id2.class1.class2

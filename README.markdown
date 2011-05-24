@@ -41,20 +41,25 @@ converts to
 	<head>
 		<meta name="robots" content="{$robots}" n:ifset="$robots">
 		<title>Haml Example</title>
-		<script type="text/javascript" src="{$basePath}/js/netteForms.js"></script>
-	</head>
+		<script type="text/javascript" src="{$basePath}/js/netteForms.js"></script></head>
+
 	<body>
-		<div n:foreach="$flashes as $flash" class="flash {$flash->type}">{=$flash->message}</div>
+		<div n:foreach="$flashes as $flash" class="flash {$flash->type}">
+			{=$flash->message}</div>
 		<div class="note">
 			<ul>
 				<li>simple text</li>
 				<li>{=time()}</li>
-				<li>{=$basePath}</li>
-			</ul>
-		</div>
-		<article>{include #content}</article>\%h3 this is not a node, it's escaped support for FormMacros: {form registration} {input name} {input submit} {/form}
-	</body>
-</html>
+				<li>{=$basePath}</li></ul></div>
+		<article>
+			{include #content}</article>
+		%h3 this is not a node, it's escaped
+
+		support for FormMacros:
+		{form registration}
+		{input name}
+		{input submit}
+		{/form}</body></html>
 ```
 
 # Requirements
@@ -109,9 +114,10 @@ goes for
 <h1>{=$title}</h1>
 <div n:foreach="$articles as $article" class="div">
 	<em>{=$article->label}</em>
-	<span>{=$article->published|date}</span>
-</div>
-<footer>functions: {=date('Y')}</footer>
+	<span>{=$article->published|date}</span></div>
+<footer>
+	functions:
+	{=date('Y')}</footer>
 ```
 
 ## Indenting

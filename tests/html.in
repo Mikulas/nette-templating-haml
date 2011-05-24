@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+	<meta name="description" content="Nette Framework web application skeleton">
+	<meta name="robots" content="{$robots}" n:ifset="$robots">
+
+	<title>MtG Price Trends</title>
+
+	<link rel="stylesheet" media="screen,projection,tv" href="http://fiddle.jshell.net/css/normalize.css" type="text/css">
+	<link rel="stylesheet" media="screen,projection,tv" href="{$basePath}/css/jquery.contextMenu.css" type="text/css">
+	<link rel="stylesheet" media="screen,projection,tv" href="{$basePath}/css/smoothness/jquery-ui-1.8.9.custom.css" type="text/css">
+	<link rel="stylesheet" media="screen,projection,tv" href="{$basePath}/css/screen.css" type="text/css">
+	<link rel="stylesheet" media="print" href="{$basePath}/css/print.css" type="text/css">
+	<link rel="shortcut icon" href="{$basePath}/favicon.ico" type="image/x-icon">
+
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+	<script type="text/javascript" src="{$basePath}/js/jquery-ui-1.8.9.custom.min.js"></script>
+	<script type="text/javascript" src="{$basePath}/js/jquery.editinplace.js"></script>
+	<script type="text/javascript" src="{$basePath}/js/jquery.tablesorter.min.js"></script>
+	<script type="text/javascript" src="{$basePath}/js/jquery.contextMenu.js"></script>
+	<script type="text/javascript" src="{$basePath}/js/netteForms.js"></script>
+	<script type="text/javascript" src="{$basePath}/js/confirm.js"></script>
+	<script n:if="$flashes" type="text/javascript" src="{$basePath}/js/removeFID.js"></script>
+
+	{block head}{/block}
+	<script type="text/javascript" n:syntax="double">
+
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-21069082-1']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
+
+	</script>
+</head>
+
+<body>
+	<div id="header">
+		&nbsp;
+	</div>
+	<div id="wrapper">
+		{if in_array($presenter->action, array('collection', 'in'))}
+			<h1>MtG Price Trends</h1>
+		{else}
+			<a class="clear" href="{plink Homepage:collection}"><h1>MtG Price Trends</h1></a>
+			<script>
+			$(function() {
+				var header = $('h1').text();
+				$('h1').hover(function() {
+					$(this).clearQueue().animate({
+						opacity: '0'
+					}, 100, function() {
+						$(this).text('to collection');
+						$(this).animate({
+							opacity: '1'
+						});
+					});
+				}, function() {
+					$(this).clearQueue().animate({
+						opacity: '0'
+					}, 100, function() {
+						$(this).text(header);
+						$(this).animate({
+							opacity: '1'
+						});
+					});
+				});
+			});
+			</script>
+		{/if}
+		<h2>{block header}{/block}</h2>
+
+		<div class="flashes">
+			<div n:foreach="$flashes as $flash" class="flash {$flash->type}">{$flash->message}</div>
+		</div>
+		<hr>
+
+		{include #content}
+	</div>
+</body>
+</html>

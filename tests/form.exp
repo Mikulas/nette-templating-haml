@@ -4,19 +4,14 @@
 	<table>
 		<tr>
 			<td>{label name, text => Jméno}</td>
-			<td>{input name}</td>
-		</tr>
+			<td>{input name}</td></tr>
 		<tr>
 			<td>{label mail, text => Mail}</td>
-			<td>{input mail}</td>
-		</tr>
+			<td>{input mail}</td></tr>
 		<tr>
 			<td>{label password, text => Heslo}</td>
-			<td>{input password}</td>
-		</tr>
+			<td>{input password}</td></tr>
 		<tr>
 			<td></td>
-			<td>{input register}</td>
-		</tr>
-	</table>
-</ul>{/form}
+			<td>{input register}</td></tr></table></ul>
+{/form}

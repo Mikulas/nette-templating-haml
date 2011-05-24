@@ -36,6 +36,7 @@ while (FALSE !== ($file = readDir($handle))) {
 	if (isset($argv[1]) && $argv[1] != $filename)
 		continue;
 
+	echo "\n#####################\n\t$filename\n\n";
 	$in = __DIR__ . "/$filename.in";
 	$template = file_get_contents($in);
 	$haml = new Haml();

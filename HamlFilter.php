@@ -147,7 +147,7 @@ class Haml extends Object
 
 			/** @todo add warning if not on first line */
 			if (String::match($line, '~^[ \t]*!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|))?$~im')) {
-				$tree['children'][] = $this->getDoctype();
+				$tree['children'][] = array('value' => $this->getDoctype(), 'line' => $line_number);
 				continue;
 			}
 
@@ -196,7 +196,7 @@ class Haml extends Object
 				 && !is_array($parents[$level]['children'][count($parents[$level]['children']) - 1])) {
 					$match['value'] = ' ' . $match['value'];
 				}
-				$parents[$level]['children'][] = $match['value'];
+				$parents[$level]['children'][] = array('value' => $match['value'], 'line' => $line_number);
 
 				$level_last = $level;
 				$last_textual = TRUE;
@@ -248,14 +248,14 @@ class Haml extends Object
 					$element['attrs']['class'][] = $m['class'];
 			}
 
-			$parents[$level]['children'][] = array('element' => $element, 'children' => array());
+			$parents[$level]['children'][] = array('element' => $element, 'children' => array(), 'line' => $line_number);
 			$parents[$level + 1] = &$parents[$level]['children'][count($parents[$level]['children']) - 1];
 
 			$element['value'] = $this->parseMacro($element['value']);
 
 			// treat value as text children node
 			if ($element['value'] !== '')
-				$parents[$level + 1]['children'][] = $element['value'];
+				$parents[$level + 1]['children'][] = array('value' => $element['value'], 'line' => $line_number);
 
 			$level_last = $level;
 		}
@@ -270,9 +270,8 @@ class Haml extends Object
 	 */
 	protected function toHtml()
 	{
-		$tree = $this->tree;
-		$last_textual = NULL;
-		$html = $this->nodeToHtml($this->tree, 0, $last_textual);
+		$line = 1;
+		$html = $this->nodeToHtml($this->tree, $line);
 		$html .= "\n";
 
 		return $html;
@@ -283,33 +282,31 @@ class Haml extends Object
 	/**
 	 * @param array $tree
 	 * @param int $level
-	 * @param bool $last_textual
+	 * @return string html fragment
 	 */
-	protected function nodeToHtml($tree, $level, & $last_textual)
+	protected function nodeToHtml($tree, & $line, $level = 0)
 	{
 		$html = '';
 		foreach ($tree['children'] as $node) {
-			if (is_array($node)) {
+			if ($line != $node['line']) {
+				$html .= str_repeat("\n", $node['line'] - $line);
+				$html .= str_repeat("\t", $level);
+				$line = $node['line'];
+			}
+
+			if (isset($node['children'])) {
 				$element = $node['element'];
 				$container = $element['tag'] === '' ? clone $this->defaultContainer : Html::el($element['tag']);
 				$container->addAttributes($element['attrs']);
 
-				if ($last_textual !== NULL) {
-					$html .= "\n";
-				}
 				$last_textual = FALSE;
-				$html .= str_repeat("\t", $level);
 				$html .= $container->startTag();
-				$html .= $this->nodeToHtml($node, $level + 1, $last_textual);
-
-				if ($this->hasChildrenElements($node))
-					$html .= "\n" . str_repeat("\t", $level);
-
+				$html .= $this->nodeToHtml($node, $line, $level + 1);
 				$html .= $container->endTag();
 
 			} else {
 				$last_textual = TRUE;
-				$html .= $node;
+				$html .= $node['value'];
 			}
 		}
 		return $html;

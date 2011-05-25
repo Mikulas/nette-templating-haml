@@ -139,7 +139,7 @@ class Haml extends Object
 		$last_indent = $indent = '';
 		$indents = array(); // level => minimal indent
 
-		$level = $level_last = 0;
+		$level = $last_level = 0;
 		$textual = $last_textual = FALSE;
 
 		$line_number = 0;
@@ -168,7 +168,7 @@ class Haml extends Object
 					$indents = array(0 => '', 1 => $indent_master);
 				}
 
-			} elseif ($indent_master === NULL && $level_last === 0) {
+			} elseif ($indent_master === NULL && $last_level === 0) {
 				$indent_master = $indent;
 				$level = $last_textual ? 0 : 1;
 				if ($last_textual && $textual) {
@@ -221,7 +221,7 @@ class Haml extends Object
 				}
 				$parents[$level]['children'][] = array('value' => $match['value'], 'line' => $line_number);
 
-				$level_last = $level;
+				$last_level = $level;
 				$last_textual = TRUE;
 				continue;
 			}
@@ -280,7 +280,7 @@ class Haml extends Object
 			if ($element['value'] !== '')
 				$parents[$level + 1]['children'][] = array('value' => $element['value'], 'line' => $line_number);
 
-			$level_last = $level;
+			$last_level = $level;
 		}
 
 		return $tree;

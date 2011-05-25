@@ -1,0 +1,14 @@
+<ul class="tree">
+	<li n:foreach="$user->getDirectManaged() as $staff" n:if="$user->getDirectManaged()">
+		{if $iterator->counter <= $width}
+		<a href="{plink Profile:, $staff->id}">{=$staff->name}</a>
+		{if $height > 1}
+		{control UserTree $staff, $width, $height - 1}
+		{else}
+		<ul class="tree">
+			<li>...</li></ul>
+		{/if}
+		{else}
+		a {=$iterator->count() - $iterator->counter + 1} dalších {** @todo přepsat pádově, udělat translator? *}
+		<?php break ?>
+		{/if}</li></ul>

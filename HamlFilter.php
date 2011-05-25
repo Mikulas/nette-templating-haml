@@ -134,7 +134,10 @@ class Haml extends Object
 	{
 		$tree = array();
 		$parents = array(0 => &$tree);
-		$indent = NULL;
+
+		$indent_master = NULL;
+		$last_indent = $indent = '';
+		$indents = array(); // level => minimal indent
 
 		$level = $level_last = 0;
 		$textual = $last_textual = FALSE;
@@ -154,38 +157,50 @@ class Haml extends Object
 			$match = String::match($line, '~^(?P<indent>[ \t]*)(?P<value>.*)$~i');
 			$element = String::match($match['value'], '~^(?P<escaped>\\\\)?(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-Z0-9_-]+)*)[ \t]*(\[(?P<opt>.*)\])?[ \t]*(?P<value>.*)$~i');
 			$textual = $element['escaped'] || ($element['tag'] === '' && $element['spec'] === '');
+			$indent = $match['indent'];
 
-			if ($match['indent'] === '') {
+			/** @todo validate indent is made by repeating indent_template */
+
+			$level = NULL;
+			if ($indent === '') {
 				$level = 0;
+				if ($textual || $indent_master === NULL) {
+					$indents = array(0 => '');
+				} else {
+					$indents = array(0 => '', 1 => $indent_master);
+				}
 
-			} elseif ($indent === NULL && $level_last === 0) {
-				$indent = $match['indent'];
+			} elseif ($indent_master === NULL && $level_last === 0) {
+				$indent_master = $indent;
 				$level = $last_textual ? 0 : 1;
+				if ($last_textual && $textual) {
+					$indents = array(0 => '');
+				} elseif ($last_textual || $textual) {
+					$indents = array(0 => '', 1 => $indent_master);
+				} else {
+					$indents = array(0 => '', 1 => $indent_master, 2 => $indent_master . $indent_master);
+				}
 
 			} else {
-				$level = 0;
-				do {
-					$level++;
-					$test = str_repeat($indent, $level);
-					if (!$textual && $level > $level_last + 1) {
-						$level = $level_last + 1;
+				foreach (array_reverse($indents, TRUE) as $i_level => $i_indent) {
+					if (strLen($indent) >= strLen($i_indent)) {
+						$level = $i_level;
 						break;
-					} elseif (!$textual && $last_textual && $level > $level_last) {
-						$level = $level_last;
-						break;
-					} elseif (strlen($test) > strlen($match['indent'])) {
-						throw new HamlException("Invalid indentation detected. Use either spaces or tabs, but not both.", NULL, $line_number);
 					}
-				} while ($test !== $match['indent']);
+				}
 
-				// free textual indent
-				if (!$last_textual && $textual && $level == $level_last) {
-					$level--;
+				foreach ($indents as $i_level => $i) {
+					if ($i_level > $level) {
+						unset($indents[$i_level]);
+					}
 				}
-				if ($textual && $level > $level_last) {
-					$level = $level_last + ($last_textual ? 0 : 1);
+
+				if (!$textual) {
+					$indents[$level + 1] = $indent . $indent_master;
 				}
+
 			}
+			$last_indent = $indent;
 
 			if ($textual) {
 				if ($element['escaped'] && ($element['tag'] !== '' || $element['spec'] !== ''))

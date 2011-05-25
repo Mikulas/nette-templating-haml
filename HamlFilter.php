@@ -159,8 +159,6 @@ class Haml extends Object
 			$textual = $element['escaped'] || ($element['tag'] === '' && $element['spec'] === '');
 			$indent = $match['indent'];
 
-			/** @todo validate indent is made by repeating indent_template */
-
 			$level = NULL;
 			if ($indent === '') {
 				$level = 0;
@@ -202,6 +200,16 @@ class Haml extends Object
 			}
 			$last_indent = $indent;
 
+			// validate indenting
+			$test = '';
+			while(strLen($test) < strLen($indent)) {
+				$test .= $indent_master;
+			};
+			if ($test !== $indent) {
+				throw new HamlException("Invalid indentation detected. Use either spaces or tabs, but not both.", NULL, $line_number);
+			}
+
+			// if the value is textual, insert it into the tree
 			if ($textual) {
 				if ($element['escaped'] && ($element['tag'] !== '' || $element['spec'] !== ''))
 					$match['value'] = substr ($match['value'], 1);

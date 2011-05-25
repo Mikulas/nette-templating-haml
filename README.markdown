@@ -122,7 +122,7 @@ goes for
 
 ## Indenting
 
-The parser tries the very best to comprehend the indent, yet some super crazy stuff such this is not parsed as one would assume:
+The parser tries the very best to comprehend the indent and even some super crazy stuff such this is parsed correctly:
 
 ```haml
 {foreach $products as $product}
@@ -132,11 +132,11 @@ The parser tries the very best to comprehend the indent, yet some super crazy st
 			%h2
 				this text finally has level 2
 				again the same
-			THIS WOULD HAVE LEVEL 2
-				and this one as well, but that's ok
+			this is level 2
+				and this one as well, and that's ok
 {/foreach}
 ```
-But don't worry, you would put it down flat for sure:
+Yet I believe you would rather put it down flat:
 
 ```haml
 {foreach $products as $product}

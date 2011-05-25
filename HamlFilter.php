@@ -8,8 +8,8 @@ namespace Nette\Templating\Filters;
 
 use Nette\Object;
 use Nette\Utils\Strings as String;
-use Nette\Utils\UnsafeHtml as Html;
-use Nette\Utils\Html as OriginalHtml;
+use Nette\Utils\UnsafeHtml as UnsafeHtml;
+use Nette\Utils\Html as Html;
 use Nette\Utils\Html\Tags;
 
 
@@ -31,7 +31,7 @@ class Haml extends Object
 	/** @var array */
 	protected $tree;
 
-	/** @var \Nette\Utils\Html */
+	/** @var \Nette\Utils\UnsafeHtml */
 	protected $defaultContainer;
 
 
@@ -49,8 +49,8 @@ class Haml extends Object
 			$config = array();
 
 		$this->config = array_merge($defaults, $config);
-		$this->defaultContainer = Html::el('div');
-		Html::$xhtml = OriginalHtml::$xhtml = $this->isXhtml();
+		$this->defaultContainer = UnsafeHtml::el('div');
+		UnsafeHtml::$xhtml = Html::$xhtml = $this->isXhtml();
 	}
 
 
@@ -80,7 +80,7 @@ class Haml extends Object
 		$this->template = $template;
 		$this->tree = $this->buildTree();
 
-		return $this->toHtml();
+		return $this->toUnsafeHtml();
 	}
 
 
@@ -291,10 +291,10 @@ class Haml extends Object
 	/**
 	 * @return string html
 	 */
-	protected function toHtml()
+	protected function toUnsafeHtml()
 	{
 		$line = 1;
-		$html = $this->nodeToHtml($this->tree, $line);
+		$html = $this->nodeToUnsafeHtml($this->tree, $line);
 		$html .= "\n";
 
 		return $html;
@@ -307,7 +307,7 @@ class Haml extends Object
 	 * @param int $level
 	 * @return string html fragment
 	 */
-	protected function nodeToHtml($tree, & $line, $level = 0)
+	protected function nodeToUnsafeHtml($tree, & $line, $level = 0)
 	{
 		$html = '';
 		foreach ($tree['children'] as $node) {
@@ -319,12 +319,12 @@ class Haml extends Object
 
 			if (isset($node['children'])) {
 				$element = $node['element'];
-				$container = $element['tag'] === '' ? clone $this->defaultContainer : Html::el($element['tag']);
+				$container = $element['tag'] === '' ? clone $this->defaultContainer : UnsafeHtml::el($element['tag']);
 				$container->addAttributes($element['attrs']);
 
 				$last_textual = FALSE;
 				$html .= $container->startTag();
-				$html .= $this->nodeToHtml($node, $line, $level + 1);
+				$html .= $this->nodeToUnsafeHtml($node, $line, $level + 1);
 				$html .= $container->endTag();
 
 			} else {

@@ -64,7 +64,7 @@ converts to
 
 # Requirements
 
-* Nette Version 2.0 Alpha 2 or newer - http://nette.org/
+* Nette Version 2.1 or newer - http://nette.org/
 
 # Installation
 

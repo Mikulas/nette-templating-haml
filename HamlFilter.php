@@ -7,8 +7,8 @@
 namespace Nette\Templating\Filters;
 
 use Nette\Object;
-use Nette\Utils\Strings as String;
-use Nette\Utils\Html as Html;
+use Nette\Utils\Strings;
+use Nette\Utils\Html;
 use Nette\Utils\Html\Tags;
 
 
@@ -100,7 +100,7 @@ class Haml extends Object
 	protected function getDoctype()
 	{
 		// @todo only search the first line
-		$match = String::match($this->template, '~^[ \t]*!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|))?$~im');
+		$match = Strings::match($this->template, '~^[ \t]*!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|))?$~im');
 		if (!isset($match['doctype'])) {
 			return $this->isXhtml() ? Tags::DOCTYPE_TRANS : Tags::DOCTYPE_4_TRANS;
 		}
@@ -148,13 +148,13 @@ class Haml extends Object
 			if (trim($line) === '') continue;
 
 			/** @todo add warning if not on first line */
-			if (String::match($line, '~^[ \t]*!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|))?$~im')) {
+			if (Strings::match($line, '~^[ \t]*!{3}([ \t]+(?P<doctype>strict|frameset|5|1\.1|basic|mobile|rdfa|))?$~im')) {
 				$tree['children'][] = array('value' => $this->getDoctype(), 'line' => $line_number);
 				continue;
 			}
 
-			$match = String::match($line, '~^(?P<indent>[ \t]*)(?P<value>.*)$~i');
-			$element = String::match($match['value'], '~^(?P<escaped>\\\\)?(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-Z0-9_-]+)*)[ \t]*(\[(?P<opt>.*)\])?[ \t]*(?P<value>.*)$~i');
+			$match = Strings::match($line, '~^(?P<indent>[ \t]*)(?P<value>.*)$~i');
+			$element = Strings::match($match['value'], '~^(?P<escaped>\\\\)?(%(?P<tag>[A-Z0-9]+))?[ \t]*(?P<spec>((\.|#)[A-Z0-9_-]+)*)[ \t]*(\[(?P<opt>.*)\])?[ \t]*(?P<value>.*)$~i');
 			$textual = $element['escaped'] || ($element['tag'] === '' && $element['spec'] === '');
 			$indent = $match['indent'];
 
@@ -233,29 +233,29 @@ class Haml extends Object
 
 			$element['attrs'] = array();
 			// set id
-			$id = String::match($element['spec'], '~#(?P<id>[A-Z0-9_-]+)~i');
+			$id = Strings::match($element['spec'], '~#(?P<id>[A-Z0-9_-]+)~i');
 			$element['attrs']['id'] = $id['id'];
 
 			// set attributes
 			/** @todo rewrite me plase */
 			$rgx_macro = '~\{.*?\}~i';
-			$macros = String::matchAll($element['opt'], $rgx_macro);
+			$macros = Strings::matchAll($element['opt'], $rgx_macro);
 			foreach ($macros as $index => $q) {
-				$element['opt'] = String::replace($element['opt'], '~' . preg_quote($q[0], '~') . '~', "__MACRO_STRING_<$index>__");
+				$element['opt'] = Strings::replace($element['opt'], '~' . preg_quote($q[0], '~') . '~', "__MACRO_STRING_<$index>__");
 			}
 			$rgx_quote = '~(\'|")(?P<quoted>.*?)\\1~i';
-			$quotes = String::matchAll($element['opt'], $rgx_quote);
+			$quotes = Strings::matchAll($element['opt'], $rgx_quote);
 			foreach ($quotes as $index => $q) {
-				$element['opt'] = String::replace($element['opt'], '~' . preg_quote($q[0], '~') . '~', "__QUOTED_STRING_<$index>__");
+				$element['opt'] = Strings::replace($element['opt'], '~' . preg_quote($q[0], '~') . '~', "__QUOTED_STRING_<$index>__");
 			}
 
-			foreach (String::matchAll($element['opt'], '~(?P<key>[:A-Z0-9_-]+)([ \t]*=>[ \t]*(?P<value>.*?)(?=,|$))?~i') as $m) {
+			foreach (Strings::matchAll($element['opt'], '~(?P<key>[:A-Z0-9_-]+)([ \t]*=>[ \t]*(?P<value>.*?)(?=,|$))?~i') as $m) {
 				if (isset($m['value'])) {
 					foreach ($macros as $index => $q) {
-						$m['value'] = String::replace($m['value'], "~__MACRO_STRING_<$index>__~", $q[0]);
+						$m['value'] = Strings::replace($m['value'], "~__MACRO_STRING_<$index>__~", $q[0]);
 					}
 					foreach ($quotes as $index => $q) {
-						$m['value'] = String::replace($m['value'], "~__QUOTED_STRING_<$index>__~", $q['quoted']);
+						$m['value'] = Strings::replace($m['value'], "~__QUOTED_STRING_<$index>__~", $q['quoted']);
 					}
 					$element['attrs'][$m['key']] = $m['value'];
 				} else {
@@ -265,7 +265,7 @@ class Haml extends Object
 
 			// set classes
 			$element['attrs']['class'] = isset($element['attrs']['class']) ? array($element['attrs']['class']) : array();
-			foreach (String::matchAll($element['spec'], '~\.(?P<class>[A-Z0-9_-]+)~i') as $m) {
+			foreach (Strings::matchAll($element['spec'], '~\.(?P<class>[A-Z0-9_-]+)~i') as $m) {
 				if (!in_array($m['class'], $element['attrs']['class']))
 					$element['attrs']['class'][] = $m['class'];
 			}
@@ -355,9 +355,9 @@ class Haml extends Object
 	 */
 	private function parseMacro($string)
 	{
-		$macro = String::match($string, '~^[ \t]*(?P<raw>!?)=(?!>)[ \t]*(?P<cmd>.*)$~im');
+		$macro = Strings::match($string, '~^[ \t]*(?P<raw>!?)=(?!>)[ \t]*(?P<cmd>.*)$~im');
 		if ($macro !== NULL) {
-			if (String::match($macro['cmd'], '~^($|input|label)~i'))
+			if (Strings::match($macro['cmd'], '~^($|input|label)~i'))
 				$string = '{' . ($macro['raw'] ? '!' : '') . $macro['cmd'] . '}';
 			else
 				$string = '{'  . ($macro['raw'] ? '!=' : '=') . $macro['cmd'] . '}';

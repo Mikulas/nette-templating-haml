@@ -8,7 +8,6 @@ namespace Nette\Templating\Filters;
 
 use Nette\Object;
 use Nette\Utils\Strings as String;
-use Nette\Utils\UnsafeHtml as UnsafeHtml;
 use Nette\Utils\Html as Html;
 use Nette\Utils\Html\Tags;
 
@@ -31,7 +30,7 @@ class Haml extends Object
 	/** @var array */
 	protected $tree;
 
-	/** @var \Nette\Utils\UnsafeHtml */
+	/** @var Nette\Utils\Html */
 	protected $defaultContainer;
 
 
@@ -49,8 +48,8 @@ class Haml extends Object
 			$config = array();
 
 		$this->config = array_merge($defaults, $config);
-		$this->defaultContainer = UnsafeHtml::el('div');
-		UnsafeHtml::$xhtml = Html::$xhtml = $this->isXhtml();
+		$this->defaultContainer = Html::el('div');
+		Html::$xhtml = $this->isXhtml();
 	}
 
 
@@ -319,7 +318,7 @@ class Haml extends Object
 
 			if (isset($node['children'])) {
 				$element = $node['element'];
-				$container = $element['tag'] === '' ? clone $this->defaultContainer : UnsafeHtml::el($element['tag']);
+				$container = $element['tag'] === '' ? clone $this->defaultContainer : Html::el($element['tag']);
 				$container->addAttributes($element['attrs']);
 
 				$last_textual = FALSE;

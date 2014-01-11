@@ -1,0 +1,17 @@
+{
+	"name": "mikulas/nette-templating-haml",
+	"type": "library",
+	"description": "Simple, practice inspired, Nette based framework.",
+	"keywords": ["haml", "filter", "latte", "addon", "templating"],
+	"license": ["BSD-3-Clause", "GPL-2.0", "GPL-3.0"],
+	"authors": [
+		{
+			"name": "Mikuláš Dítě",
+			"homepage": "https://twitter.com/MikulasDite"
+		}
+	],
+	"require": {
+		"nette/nette": "~2.1@dev",
+		"php": ">=5.3"
+	},
+}
